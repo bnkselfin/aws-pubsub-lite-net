@@ -28,7 +28,7 @@ internal sealed class QueueManager
     }
 
     internal async Task<QueueResource> AddQueueAsync(
-        ResourceName name, string snsArn, CancellationToken ct)
+        ResourceName name, string snsArn, QueueDlq? dlq, CancellationToken ct)
     {
         var queueName = name.ToString();
 
@@ -36,7 +36,7 @@ internal sealed class QueueManager
             return existing;
 
         var (sqsArn, sqsUrl) = await CreateSqsQueueAsync(queueName, snsArn, ct);
-        await ApplyQueueAttributesAsync(sqsArn, sqsUrl, snsArn, ct);
+        await ApplyQueueAttributesAsync(sqsArn, sqsUrl, snsArn, dlq, ct);
 
         var queue = new QueueResource(name, sqsArn, sqsUrl, snsArn);
         return _registry.GetOrAddQueue(queueName, queue);
@@ -84,7 +84,7 @@ internal sealed class QueueManager
     }
 
     private async Task ApplyQueueAttributesAsync(
-        string sqsArn, string sqsUrl, string snsArn, CancellationToken ct)
+        string sqsArn, string sqsUrl, string snsArn, QueueDlq? dlq, CancellationToken ct)
     {
         var retentionSecs = TimeSpan.FromMilliseconds(_queueSettings.MessageRetentionMs).TotalSeconds;
 
@@ -94,6 +94,9 @@ internal sealed class QueueManager
             ["VisibilityTimeout"] = _queueSettings.VisibilityTimeoutSecs.ToString(),
             ["Policy"] = BuildSqsPolicy(snsArn, sqsArn)
         };
+
+        if (dlq is not null)
+            attributes["RedrivePolicy"] = dlq.ToRedrivePolicyJson();
 
         try
         {
