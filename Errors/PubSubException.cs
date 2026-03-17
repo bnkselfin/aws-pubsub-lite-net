@@ -9,6 +9,7 @@ public enum PubSubErrorKind
     SnsTopicCreation,
     GettingSnsTopicArn,
     SqsQueueCreation,
+    DlqQueueCreation,
     GettingSqsQueueUrl,
     GettingQueueAttributes,
     SettingQueueAttributes,
@@ -20,6 +21,9 @@ public enum PubSubErrorKind
     SubscribingQueue,
     ListingSubscriptions,
     DeleteMessage,
+    DeleteDlqMessage,
+    ReceivingMessage,
+    SendingToQueue,
     SettingTopicAttributes,
     Resource
 }
@@ -51,6 +55,9 @@ public class PubSubException : Exception
 
     public static PubSubException SqsQueueCreation(string queue, string snsArn, Exception inner) =>
         new(PubSubErrorKind.SqsQueueCreation, $"Error creating sqs queue '{queue}' for sns topic(arn) '{snsArn}': {inner.Message}", inner);
+
+    public static PubSubException DlqQueueCreation(string queue, Exception inner) =>
+        new(PubSubErrorKind.DlqQueueCreation, $"Error creating DLQ '{queue}': {inner.Message}", inner);
 
     public static PubSubException GettingSqsQueueUrl(string queue) =>
         new(PubSubErrorKind.GettingSqsQueueUrl, $"Error getting SQS queue '{queue}' url");
@@ -84,6 +91,15 @@ public class PubSubException : Exception
 
     public static PubSubException DeleteMessage(int messageLength, string queueUrl, Exception inner) =>
         new(PubSubErrorKind.DeleteMessage, $"Error deleting message (len={messageLength}) in queue(url) '{queueUrl}'", inner);
+
+    public static PubSubException DeleteDlqMessage(string queueUrl, Exception inner) =>
+        new(PubSubErrorKind.DeleteDlqMessage, $"Error deleting DLQ message in queue(url) '{queueUrl}': {inner.Message}", inner);
+
+    public static PubSubException ReceivingMessage(string queueUrl, Exception inner) =>
+        new(PubSubErrorKind.ReceivingMessage, $"Error receiving from queue(url) '{queueUrl}': {inner.Message}", inner);
+
+    public static PubSubException SendingToQueue(string queueUrl, Exception inner) =>
+        new(PubSubErrorKind.SendingToQueue, $"Error sending message to queue(url) '{queueUrl}': {inner.Message}", inner);
 
     public static PubSubException SettingTopicAttributes(string topicArn, string attribute, Exception inner) =>
         new(PubSubErrorKind.SettingTopicAttributes, $"Error setting attribute '{attribute}' of SNS topic '{topicArn}': {inner.Message}", inner);
