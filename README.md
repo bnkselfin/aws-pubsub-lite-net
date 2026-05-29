@@ -164,3 +164,7 @@ The project targets **net10.0** — a matching .NET 10 SDK is required.
 - Handler exceptions are caught but still flip `allHandled = false` (the message redelivers under `DeleteAllHandled`).
 - Parallel handlers cannot be force-aborted on cancellation — handlers must observe the `CancellationToken` to stop promptly.
 - No tests yet — pure logic is testable; AWS-touching code needs LocalStack or similar.
+
+## License
+
+Licensed under the [MIT License](./LICENSE). Copyright (c) 2026 bnkselfin.
